@@ -6,13 +6,13 @@ VALID_INPUTS = DIRECTIONS + [EXIT_COMMAND]
 CANNOT_GO_THAT_WAY = "You bumped into a wall."
 GAME_OVER = "Thanks for playing."
 
+game_won = False
+
 rooms = {
-    'Great Hall': {'North': 'Parlor', 'West': 'Conservatory', 'South':'Wine Cellar',
-        'East':'Library'
-    },
+    'Great Hall': {'North': 'Parlor', 'West': 'Conservatory', 'South': 'Wine Cellar', 'East': 'Library'},
     'Parlor': {'South': 'Great Hall'},
-    'Wine Cellar': {'North':'Great Hall','East': 'Basement'},
-    'Library': {'West': 'Great Hall','North': 'Game Room'},
+    'Wine Cellar': {'North': 'Great Hall', 'East': 'Basement'},
+    'Library': {'West': 'Great Hall', 'North': 'Game Room'},
     'Game Room': {'South': 'Library'},
     'Basement': {'West': 'Wine Cellar'},
     'Conservatory': {'East': 'Great Hall'}
@@ -27,8 +27,11 @@ items = {
 }
 
 def navigate(current_room: str, user_input: str):
+    global game_won  # Use the global keyword to modify the global variable
     next_room = current_room
     err_msg = 'Please Pick a Direction.'
+
+    user_input = user_input.capitalize()  # Convert user input to capitalize
 
     if user_input in DIRECTIONS:
         if user_input in rooms[current_room]:
@@ -46,31 +49,38 @@ def navigate(current_room: str, user_input: str):
         # If the obtained item is 'Battle Axe', start the dice roll game
         if item == 'Battle Axe':
             num_rolls = 3  # Example: Set the number of rolls
+
             for i in range(num_rolls):
                 die1 = random.randint(1, 6)
                 die2 = random.randint(1, 6)
                 roll_total = die1 + die2
 
-                if roll_total == 6:
+                if roll_total in [3, 6, 9]:
                     print(f'Roll {i} is {roll_total} (Die 1: {die1}, Die 2: {die2}) - You Win! Ego Death Achieved!')
-                    break
-                elif roll_total == 7:
-                    print(f'Roll {i} is {roll_total} (Die 1: {die1}, Die 2: {die2})')
+                    game_won = True
+                    return 'Great Hall', 'You won! Thanks for playing.'  # End the game if the player wins
                 else:
                     print(f'Roll {i} is {roll_total} (Die 1: {die1}, Die 2: {die2})')
 
             print('Dice roll game completed.')
 
+            return 'Great Hall', 'Please Pick a Direction.'  # Loop back to the beginning
+
     return next_room, err_msg
+
 
 current_room = 'Great Hall'
 while True:
-    user_input = input(f"Enter a direction ({', '.join(DIRECTIONS)}) or '{EXIT_COMMAND}' to exit:\n").strip().capitalize()
-
-    if user_input == EXIT_COMMAND:
+    if game_won:
         print(GAME_OVER)
         break
+    else:
+        user_input = input(f"Enter a direction ({', '.join(DIRECTIONS)}) or '{EXIT_COMMAND}' to exit:\n").strip().capitalize()
 
-    next_room, err_msg = navigate(current_room, user_input)
-    current_room = next_room
-    print(err_msg)
+        if user_input == EXIT_COMMAND:
+            print(GAME_OVER)
+            break
+
+        next_room, err_msg = navigate(current_room, user_input)
+        current_room = next_room
+        print(err_msg)
